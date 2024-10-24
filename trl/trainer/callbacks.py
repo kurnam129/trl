@@ -430,7 +430,7 @@ class LogCompletionsCallback(WandbCallback):
         # Save the last logged step, so we don't log the same completions multiple times
         self._last_logged_step = state.global_step
 
-class MergeModelLinearCallBack(TrainerCallback):
+class MergeModelCallBack(TrainerCallback):
     def __init__(self, merge_config, push_to_hub=False, merge_at_every_checkpoint=False):
         self.push_to_hub = push_to_hub
         self.merge_at_every_checkpoint = merge_at_every_checkpoint
