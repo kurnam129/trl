@@ -38,7 +38,7 @@ from transformers.trainer_utils import has_length
 from ..models.utils import unwrap_model_for_generation
 from .judges import BasePairwiseJudge
 
-from .mergekit_utils import Merge,upload_model_to_hf,get_last_checkpoint_path
+from ..mergekit_utils import Merge,upload_model_to_hf,get_last_checkpoint_path
 
 
 if is_deepspeed_available():
