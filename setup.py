@@ -83,6 +83,7 @@ REQUIRED_PKGS = [
     "accelerate",
     "datasets",
     "tyro>=0.5.11",
+    "safetensors>=0.4.1",
 ]
 EXTRAS = {
     "test": [
@@ -103,7 +104,7 @@ EXTRAS = {
     "deepspeed": ["deepspeed>=0.14.4"],
     "quantization": ["bitsandbytes<=0.41.1"],
     "llm_judge": ["openai>=1.23.2", "llm-blender>=0.0.2"],
-    "mergekit": ["mergekit","safetensors>=0.4.1"],
+    "mergekit": ["mergekit"],
 }
 EXTRAS["dev"] = []
 for reqs in EXTRAS.values():
