@@ -26,6 +26,10 @@ from transformers.utils import is_peft_available
 from trl import BasePairwiseJudge, DPOConfig, DPOTrainer, LogCompletionsCallback, MergeModelCallback, WinRateCallback
 from trl.mergekit_utils import MergeConfig
 
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 if is_peft_available():
     from peft import LoraConfig
@@ -227,18 +231,18 @@ class LogCompletionsCallbackTester(unittest.TestCase):
 
 class MergeModelCallbackTester(unittest.TestCase):
     def setUp(self):
-        print("Setting up")
+        logger.info("Setting up")
         self.model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
-        print("Model loaded")
+        logger.info("Model loaded")
         self.tokenizer = AutoTokenizer.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
-        print("Tokenizer loaded")
+        logger.info("Tokenizer loaded")
         self.dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
-        print("Dataset loaded")
+        logger.info("Dataset loaded")
 
     def test_last_checkpoint(self):
-        print("Testing last checkpoint")
+        logger.info("Testing last checkpoint")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            print("Temp dir created")
+            logger.info("Temp dir created")
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -246,33 +250,33 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_strategy="steps",
                 save_steps=1,
             )
-            print("Training args created")
+            logger.info("Training args created")
             trainer = DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
             )
-            print("Trainer created")
+            logger.info("Trainer created")
             config = MergeConfig("linear")
-            print("Config created")
+            logger.info("Config created")
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
-            print("Callback created")
+            logger.info("Callback created")
             trainer.add_callback(merge_callback)
-            print("Callback added")
+            logger.info("Callback added")
             trainer.train()
-            print("Training done")
+            logger.info("Training done")
             last_checkpoint = get_last_checkpoint(tmp_dir)
-            print("Last checkpoint found")
+            logger.info("Last checkpoint found")
             merged_path = os.path.join(last_checkpoint, "merged")
-            print("Merged path created")
+            logger.info("Merged path created")
             self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
-            print("last checkpoint test done")
+            logger.info("last checkpoint test done")
 
     def test_every_checkpoint(self):
-        print("Testing every checkpoint")
+        logger.info("Testing every checkpoint")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            print("Temp dir created")
+            logger.info("Temp dir created")
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -280,29 +284,29 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_strategy="steps",
                 save_steps=1,
             )
-            print("Training args created")
+            logger.info("Training args created")
             trainer = DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
             )
-            print("Trainer created")
+            logger.info("Trainer created")
             config = MergeConfig("linear")
-            print("Config created")
+            logger.info("Config created")
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
-            print("Callback created")
+            logger.info("Callback created")
             trainer.add_callback(merge_callback)
-            print("Callback added")
+            logger.info("Callback added")
             trainer.train()
-            print("Training done")
+            logger.info("Training done")
             checkpoints = sorted(
                 [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
             )
-            print("Checkpoints found")
+            logger.info("Checkpoints found")
             for checkpoint in checkpoints:
                 merged_path = os.path.join(checkpoint, "merged")
                 self.assertTrue(
                     os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
                 )
-            print("every checkpoint test done")
+            logger.info("every checkpoint test done")
