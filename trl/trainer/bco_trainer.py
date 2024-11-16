@@ -104,7 +104,9 @@ def _tokenize(
     full_input_ids = [np.array(f) for f in full_input_ids]
     for full, concat in zip(full_input_ids, full_concat_input_ids):
         if len(full) != len(concat):
-            raise ValueError("Prompt input ids and answer input ids should have the same length.")
+            raise ValueError(
+                "The elements in 'full_input_ids' and 'full_concat_input_ids' must have the same pairwise length."
+            )
 
     # On some tokenizers, like Llama-2 tokenizer, there are occasions where tokens
     # can be merged together when tokenizing prompt+answer. This could result
@@ -223,17 +225,20 @@ def _process_tokens(example: Dict[str, Any], model: "PreTrainedModel" = None, **
         )
 
         # add BOS, which affects both prompt and the full completion
-        if len(all_tokens["prompt_input_ids"]) == 0 or bos_token_id != all_tokens["prompt_input_ids"][0]:
-            batch[f"{kwargs['prefix']}prompt_input_ids"] = [bos_token_id] + batch[
-                f"{kwargs['prefix']}prompt_input_ids"
-            ]
-            batch[f"{kwargs['prefix']}prompt_attention_mask"] = [1] + batch[f"{kwargs['prefix']}prompt_attention_mask"]
-            batch[f"{kwargs['prefix']}completion_input_ids"] = [bos_token_id] + batch[
-                f"{kwargs['prefix']}completion_input_ids"
-            ]
-            batch[f"{kwargs['prefix']}completion_attention_mask"] = [1] + batch[
-                f"{kwargs['prefix']}completion_attention_mask"
-            ]
+        if bos_token_id is not None:
+            if len(all_tokens["prompt_input_ids"]) == 0 or bos_token_id != all_tokens["prompt_input_ids"][0]:
+                batch[f"{kwargs['prefix']}prompt_input_ids"] = [bos_token_id] + batch[
+                    f"{kwargs['prefix']}prompt_input_ids"
+                ]
+                batch[f"{kwargs['prefix']}prompt_attention_mask"] = [1] + batch[
+                    f"{kwargs['prefix']}prompt_attention_mask"
+                ]
+                batch[f"{kwargs['prefix']}completion_input_ids"] = [bos_token_id] + batch[
+                    f"{kwargs['prefix']}completion_input_ids"
+                ]
+                batch[f"{kwargs['prefix']}completion_attention_mask"] = [1] + batch[
+                    f"{kwargs['prefix']}completion_attention_mask"
+                ]
         # add EOS, which affects only the full completion
         if len(all_tokens["answer_input_ids"]) == 0 or eos_token_id != all_tokens["answer_input_ids"][-1]:
             batch[f"{kwargs['prefix']}completion_input_ids"] = batch[f"{kwargs['prefix']}completion_input_ids"] + [

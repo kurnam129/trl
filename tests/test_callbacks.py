@@ -18,11 +18,17 @@ import tempfile
 import unittest
 
 from datasets import load_dataset
-from peft import LoraConfig
 from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, Trainer, TrainingArguments
-from transformers.testing_utils import require_wandb
+from transformers.testing_utils import require_peft, require_wandb
+from transformers.trainer_utils import get_last_checkpoint
+from transformers.utils import is_peft_available
 
-from trl import BasePairwiseJudge, LogCompletionsCallback, WinRateCallback
+from trl import BasePairwiseJudge, DPOConfig, DPOTrainer, LogCompletionsCallback, MergeModelCallback, WinRateCallback
+from trl.mergekit_utils import MergeConfig
+
+
+if is_peft_available():
+    from peft import LoraConfig
 
 
 class HalfPairwiseJudge(BasePairwiseJudge):
@@ -128,6 +134,7 @@ class WinRateCallbackTester(unittest.TestCase):
             winrate_history = [h for h in trainer.state.log_history if "eval_win_rate" in h]
             self.assertListEqual(winrate_history, self.expected_winrates)
 
+    @require_peft
     def test_lora(self):
         with tempfile.TemporaryDirectory() as tmp_dir:
             peft_config = LoraConfig(
@@ -216,3 +223,64 @@ class LogCompletionsCallbackTester(unittest.TestCase):
 
             # Check that the prompt is in the log
             self.assertIn(self.dataset["test"][0]["prompt"], completions["data"][0])
+
+
+class MergeModelCallbackTester(unittest.TestCase):
+    def setUp(self):
+        self.model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
+        self.tokenizer = AutoTokenizer.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
+        self.dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
+
+    def test_last_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            training_args = DPOConfig(
+                output_dir=tmp_dir,
+                num_train_epochs=1,
+                report_to="none",
+                save_strategy="steps",
+                save_steps=1,
+            )
+            trainer = DPOTrainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=self.dataset,
+                tokenizer=self.tokenizer,
+            )
+            config = MergeConfig("linear")
+            merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
+            trainer.add_callback(merge_callback)
+            trainer.train()
+
+            last_checkpoint = get_last_checkpoint(tmp_dir)
+            merged_path = os.path.join(last_checkpoint, "merged")
+            self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
+
+    def test_every_checkpoint(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            training_args = DPOConfig(
+                output_dir=tmp_dir,
+                num_train_epochs=1,
+                report_to="none",
+                save_strategy="steps",
+                save_steps=1,
+            )
+            trainer = DPOTrainer(
+                model=self.model,
+                args=training_args,
+                train_dataset=self.dataset,
+                tokenizer=self.tokenizer,
+            )
+            config = MergeConfig("linear")
+            merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
+            trainer.add_callback(merge_callback)
+            trainer.train()
+
+            checkpoints = sorted(
+                [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
+            )
+
+            for checkpoint in checkpoints:
+                merged_path = os.path.join(checkpoint, "merged")
+                self.assertTrue(
+                    os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
+                )
