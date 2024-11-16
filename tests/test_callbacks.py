@@ -227,12 +227,18 @@ class LogCompletionsCallbackTester(unittest.TestCase):
 
 class MergeModelCallbackTester(unittest.TestCase):
     def setUp(self):
+        print("setting up")
         self.model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
+        print("model loaded")
         self.tokenizer = AutoTokenizer.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
+        print("tokenizer loaded")
         self.dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
+        print("dataset loaded")
 
     def test_last_checkpoint(self):
+        print("testing")
         with tempfile.TemporaryDirectory() as tmp_dir:
+            print("temp dir created")
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -240,23 +246,34 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_strategy="steps",
                 save_steps=1,
             )
+            print("training args created")
             trainer = DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
             )
+            print("trainer created")
             config = MergeConfig("linear")
+            print("config created")
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
+            print("callback created")
             trainer.add_callback(merge_callback)
+            print("callback added")
             trainer.train()
+            print("training done")
 
             last_checkpoint = get_last_checkpoint(tmp_dir)
+            print("last checkpoint found")
             merged_path = os.path.join(last_checkpoint, "merged")
+            print("merged path found")
             self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
+            print("test done")
 
     def test_every_checkpoint(self):
+        print("testing")
         with tempfile.TemporaryDirectory() as tmp_dir:
+            print("temp dir created")
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -264,23 +281,30 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_strategy="steps",
                 save_steps=1,
             )
+            print("training args created")
             trainer = DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
             )
+            print("trainer created")
             config = MergeConfig("linear")
+            print("config created")
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
+            print("callback created")
             trainer.add_callback(merge_callback)
+            print("callback
             trainer.train()
+            print("training done")
 
             checkpoints = sorted(
                 [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
             )
-
+            print("checkpoints found")
             for checkpoint in checkpoints:
                 merged_path = os.path.join(checkpoint, "merged")
                 self.assertTrue(
                     os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
                 )
+            print("test done")
