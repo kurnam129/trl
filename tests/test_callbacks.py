@@ -25,10 +25,11 @@ from transformers.utils import is_peft_available
 
 from trl import BasePairwiseJudge, DPOConfig, DPOTrainer, LogCompletionsCallback, MergeModelCallback, WinRateCallback
 from trl.mergekit_utils import MergeConfig
-import gc
+
 
 if is_peft_available():
     from peft import LoraConfig
+
 
 class HalfPairwiseJudge(BasePairwiseJudge):
     """Naive pairwise judge that always returns [1, 0]"""
@@ -226,17 +227,12 @@ class LogCompletionsCallbackTester(unittest.TestCase):
 
 class MergeModelCallbackTester(unittest.TestCase):
     def setUp(self):
-        print("setting up")
         self.model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
-        print("model loaded")
         self.tokenizer = AutoTokenizer.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
-        print("tokenizer loaded")
         self.dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
-        print("dataset loaded")
 
     def test_last_checkpoint(self):
-        print("testing")
-        output_dir = "trained_dir_last_checkpoint"
+        output_dir = "dir_last_checkpoint"
         training_args = DPOConfig(
             output_dir=output_dir,
             num_train_epochs=1,
@@ -244,36 +240,23 @@ class MergeModelCallbackTester(unittest.TestCase):
             save_strategy="steps",
             save_steps=1,
         )
-        print("training args created")
         trainer = DPOTrainer(
             model=self.model,
             args=training_args,
             train_dataset=self.dataset,
-            tokenizer=self.tokenizer)
-        print("trainer created")
-        
+            tokenizer=self.tokenizer,
+        )
         config = MergeConfig("linear")
-        print("config created")
         merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
-        print("callback created")
         trainer.add_callback(merge_callback)
-        print("callback added")
         trainer.train()
-        print("training done")
+
         last_checkpoint = get_last_checkpoint(output_dir)
-        print("last checkpoint: ", last_checkpoint)
         merged_path = os.path.join(last_checkpoint, "merged")
-        print("merged path: ", merged_path)
-        print("does merged_path dir exist?",os.path.isdir(merged_path))
         self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
-        print("test done")
-        #del trainer
-        #gc.collect()
-        #print("tmp dir deleted")
 
     def test_every_checkpoint(self):
-        print("testing")
-        output_dir = "trained_dir_every_checkpoint"
+        output_dir = "dir_every_checkpoint"
         training_args = DPOConfig(
             output_dir=output_dir,
             num_train_epochs=1,
@@ -281,34 +264,21 @@ class MergeModelCallbackTester(unittest.TestCase):
             save_strategy="steps",
             save_steps=1,
         )
-        print("training args created")
-
         trainer = DPOTrainer(
             model=self.model,
             args=training_args,
             train_dataset=self.dataset,
-            tokenizer=self.tokenizer)
-        
-        print("trainer created")
+            tokenizer=self.tokenizer,
+        )
         config = MergeConfig("linear")
-        print("config created")
         merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
-        print("callback created")
         trainer.add_callback(merge_callback)
-        print("callback")
-        trainer.train()#
-        print("training done")
+        trainer.train()
+
         checkpoints = sorted(
             [os.path.join(output_dir, cp) for cp in os.listdir(output_dir) if cp.startswith("checkpoint-")]
         )
-        print("checkpoints : ", checkpoints)
+
         for checkpoint in checkpoints:
             merged_path = os.path.join(checkpoint, "merged")
-            print("does merged_path dir exist?",os.path.isdir(merged_path))
-            self.assertTrue(
-                os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
-            )
-        print("test done")
-        #del trainer
-        #gc.collect()
-        #print("tmp dir deleted")
+            self.assertTrue(os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}.")
