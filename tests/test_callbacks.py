@@ -294,7 +294,7 @@ class MergeModelCallbackTester(unittest.TestCase):
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
             print("callback created")
             trainer.add_callback(merge_callback)
-            print("callback
+            print("callback")
             trainer.train()
             print("training done")
 
