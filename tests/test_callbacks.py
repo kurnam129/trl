@@ -239,6 +239,7 @@ class MergeModelCallbackTester(unittest.TestCase):
         print("testing")
         with tempfile.TemporaryDirectory() as tmp_dir:
             print("temp dir created")
+            print("temp dir path: ", tmp_dir)
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -275,6 +276,7 @@ class MergeModelCallbackTester(unittest.TestCase):
         print("testing")
         with tempfile.TemporaryDirectory() as tmp_dir:
             print("temp dir created")
+            print("temp dir path: ", tmp_dir)
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
