@@ -236,7 +236,7 @@ class MergeModelCallbackTester(unittest.TestCase):
 
     def test_last_checkpoint(self):
         print("testing")
-        output_dir = "trained_dir"
+        output_dir = "trained_dir_last_checkpoint"
         training_args = DPOConfig(
             output_dir=output_dir,
             num_train_epochs=1,
@@ -273,7 +273,7 @@ class MergeModelCallbackTester(unittest.TestCase):
 
     def test_every_checkpoint(self):
         print("testing")
-        output_dir = "trained_dir"
+        output_dir = "trained_dir_every_checkpoint"
         training_args = DPOConfig(
             output_dir=output_dir,
             num_train_epochs=1,
