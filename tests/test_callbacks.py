@@ -296,7 +296,7 @@ class MergeModelCallbackTester(unittest.TestCase):
         print("callback created")
         trainer.add_callback(merge_callback)
         print("callback")
-        trainer.train()
+        trainer.train()#
         print("training done")
         checkpoints = sorted(
             [os.path.join(output_dir, cp) for cp in os.listdir(output_dir) if cp.startswith("checkpoint-")]
