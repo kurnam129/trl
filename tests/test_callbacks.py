@@ -308,3 +308,9 @@ class MergeModelCallbackTester(unittest.TestCase):
                     os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
                 )
             print("test done")
+    def test_tmp_dir(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # Directory should exist inside the with block
+            self.assertTrue(os.path.exists(tmp_dir))
+        # Directory should be deleted after the with block
+        self.assertFalse(os.path.exists(tmp_dir))
