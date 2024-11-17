@@ -9,7 +9,7 @@ on:
       - ".github/**.yml"
       - "examples/**.py"
       - "scripts/**.py"
-      - "tests/**.py"
+      - "tests/test_callbacks.py"
       - "trl/**.py"
       - "setup.py"
 
