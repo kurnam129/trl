@@ -1,0 +1,12 @@
+dtype: float16
+merge_method: linear
+slices:
+- sources:
+  - layer_range: [0, 2]
+    model: trained_dir/checkpoint-3
+    parameters:
+      weight: 0.5
+  - layer_range: [0, 2]
+    model: trl-internal-testing/tiny-random-LlamaForCausalLM
+    parameters:
+      weight: 0.5
