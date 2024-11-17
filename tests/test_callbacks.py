@@ -231,18 +231,12 @@ class LogCompletionsCallbackTester(unittest.TestCase):
 
 class MergeModelCallbackTester(unittest.TestCase):
     def setUp(self):
-        logger.info("Setting up")
         self.model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
-        logger.info("Model loaded")
         self.tokenizer = AutoTokenizer.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
-        logger.info("Tokenizer loaded")
         self.dataset = load_dataset("trl-internal-testing/zen", "standard_preference", split="train")
-        logger.info("Dataset loaded")
 
     def test_last_checkpoint(self):
-        logger.info("Testing last checkpoint")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            logger.info("Temp dir created")
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -250,33 +244,22 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_strategy="steps",
                 save_steps=1,
             )
-            logger.info("Training args created")
             trainer = DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
             )
-            logger.info("Trainer created")
             config = MergeConfig("linear")
-            logger.info("Config created")
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
-            logger.info("Callback created")
             trainer.add_callback(merge_callback)
-            logger.info("Callback added")
             trainer.train()
-            logger.info("Training done")
             last_checkpoint = get_last_checkpoint(tmp_dir)
-            logger.info("Last checkpoint found")
             merged_path = os.path.join(last_checkpoint, "merged")
-            logger.info("Merged path created")
             self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
-            logger.info("last checkpoint test done")
 
     def test_every_checkpoint(self):
-        logger.info("Testing every checkpoint")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            logger.info("Temp dir created")
             training_args = DPOConfig(
                 output_dir=tmp_dir,
                 num_train_epochs=1,
@@ -284,29 +267,27 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_strategy="steps",
                 save_steps=1,
             )
-            logger.info("Training args created")
             trainer = DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
             )
-            logger.info("Trainer created")
             config = MergeConfig("linear")
-            logger.info("Config created")
             merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
-            logger.info("Callback created")
             trainer.add_callback(merge_callback)
-            logger.info("Callback added")
             trainer.train()
-            logger.info("Training done")
             checkpoints = sorted(
                 [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
             )
-            logger.info("Checkpoints found")
             for checkpoint in checkpoints:
                 merged_path = os.path.join(checkpoint, "merged")
                 self.assertTrue(
                     os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
                 )
-            logger.info("every checkpoint test done")
+    def test_tmp_dir(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # Directory should exist inside the with block
+            self.assertTrue(os.path.exists(tmp_dir))
+        # Directory should be deleted after the with block
+        self.assertFalse(os.path.exists(tmp_dir))
