@@ -271,6 +271,7 @@ class MergeModelCallbackTester(unittest.TestCase):
             print("does merged_path dir exist?",os.path.isdir(merged_path))
             self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
             print("test done")
+            del trainer
         print("tmp dir deleted")
 
     def test_every_checkpoint(self):
@@ -313,4 +314,5 @@ class MergeModelCallbackTester(unittest.TestCase):
                     os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
                 )
             print("test done")
+            del trainer
         print("tmp dir deleted")
