@@ -273,42 +273,42 @@ class MergeModelCallbackTester(unittest.TestCase):
 
     def test_every_checkpoint(self):
         print("testing")
-            output_dir = "trained_dir"
-            training_args = DPOConfig(
-                output_dir=output_dir,
-                num_train_epochs=1,
-                report_to="none",
-                save_strategy="steps",
-                save_steps=1,
-            )
-            print("training args created")
+        output_dir = "trained_dir"
+        training_args = DPOConfig(
+            output_dir=output_dir,
+            num_train_epochs=1,
+            report_to="none",
+            save_strategy="steps",
+            save_steps=1,
+        )
+        print("training args created")
 
-            trainer = DPOTrainer(
-                model=self.model,
-                args=training_args,
-                train_dataset=self.dataset,
-                tokenizer=self.tokenizer)
-            
-            print("trainer created")
-            config = MergeConfig("linear")
-            print("config created")
-            merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
-            print("callback created")
-            trainer.add_callback(merge_callback)
-            print("callback")
-            trainer.train()
-            print("training done")
-            checkpoints = sorted(
-                [os.path.join(output_dir, cp) for cp in os.listdir(output_dir) if cp.startswith("checkpoint-")]
+        trainer = DPOTrainer(
+            model=self.model,
+            args=training_args,
+            train_dataset=self.dataset,
+            tokenizer=self.tokenizer)
+        
+        print("trainer created")
+        config = MergeConfig("linear")
+        print("config created")
+        merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
+        print("callback created")
+        trainer.add_callback(merge_callback)
+        print("callback")
+        trainer.train()
+        print("training done")
+        checkpoints = sorted(
+            [os.path.join(output_dir, cp) for cp in os.listdir(output_dir) if cp.startswith("checkpoint-")]
+        )
+        print("checkpoints : ", checkpoints)
+        for checkpoint in checkpoints:
+            merged_path = os.path.join(checkpoint, "merged")
+            print("does merged_path dir exist?",os.path.isdir(merged_path))
+            self.assertTrue(
+                os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
             )
-            print("checkpoints : ", checkpoints)
-            for checkpoint in checkpoints:
-                merged_path = os.path.join(checkpoint, "merged")
-                print("does merged_path dir exist?",os.path.isdir(merged_path))
-                self.assertTrue(
-                    os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
-                )
-            print("test done")
-            #del trainer
-            #gc.collect()
+        print("test done")
+        #del trainer
+        #gc.collect()
         #print("tmp dir deleted")
