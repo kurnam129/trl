@@ -25,7 +25,7 @@ from transformers.utils import is_peft_available
 
 from trl import BasePairwiseJudge, DPOConfig, DPOTrainer, LogCompletionsCallback, MergeModelCallback, WinRateCallback
 from trl.mergekit_utils import MergeConfig
-
+import gc
 
 if is_peft_available():
     from peft import LoraConfig
@@ -272,6 +272,7 @@ class MergeModelCallbackTester(unittest.TestCase):
             self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
             print("test done")
             del trainer
+            gc.collect()
         print("tmp dir deleted")
 
     def test_every_checkpoint(self):
@@ -315,4 +316,5 @@ class MergeModelCallbackTester(unittest.TestCase):
                 )
             print("test done")
             del trainer
+            gc.collect()
         print("tmp dir deleted")
