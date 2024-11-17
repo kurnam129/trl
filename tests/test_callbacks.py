@@ -248,21 +248,21 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_steps=1,
             )
             print("training args created")
-            trainer = DPOTrainer(
+            with DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
-            )
-            print("trainer created")
-            config = MergeConfig("linear")
-            print("config created")
-            merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
-            print("callback created")
-            trainer.add_callback(merge_callback)
-            print("callback added")
-            trainer.train()
-            print("training done")
+            ) as trainer:
+                print("trainer created")
+                config = MergeConfig("linear")
+                print("config created")
+                merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=False)
+                print("callback created")
+                trainer.add_callback(merge_callback)
+                print("callback added")
+                trainer.train()
+                print("training done")
 
             last_checkpoint = get_last_checkpoint(tmp_dir)
             print("last checkpoint: ", last_checkpoint)
@@ -288,21 +288,22 @@ class MergeModelCallbackTester(unittest.TestCase):
                 save_steps=1,
             )
             print("training args created")
-            trainer = DPOTrainer(
+
+            with DPOTrainer(
                 model=self.model,
                 args=training_args,
                 train_dataset=self.dataset,
                 tokenizer=self.tokenizer,
-            )
-            print("trainer created")
-            config = MergeConfig("linear")
-            print("config created")
-            merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
-            print("callback created")
-            trainer.add_callback(merge_callback)
-            print("callback")
-            trainer.train()
-            print("training done")
+            ) as trainer:
+                print("trainer created")
+                config = MergeConfig("linear")
+                print("config created")
+                merge_callback = MergeModelCallback(config, push_to_hub=False, merge_at_every_checkpoint=True)
+                print("callback created")
+                trainer.add_callback(merge_callback)
+                print("callback")
+                trainer.train()
+                print("training done")
 
             checkpoints = sorted(
                 [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
