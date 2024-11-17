@@ -307,9 +307,9 @@ class MergeModelCallbackTester(unittest.TestCase):
                 [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
             )
             print("checkpoints : ", checkpoints)
-            print("does merged_path dir exist?",os.path.isdir(merged_path))
             for checkpoint in checkpoints:
                 merged_path = os.path.join(checkpoint, "merged")
+                print("does merged_path dir exist?",os.path.isdir(merged_path))
                 self.assertTrue(
                     os.path.isdir(merged_path), f"Merged folder does not exist in checkpoint {checkpoint}."
                 )
