@@ -26,11 +26,17 @@ from transformers.utils import is_peft_available
 from trl import BasePairwiseJudge, DPOConfig, DPOTrainer, LogCompletionsCallback, MergeModelCallback, WinRateCallback
 from trl.mergekit_utils import MergeConfig
 import gc
-import time
 
 if is_peft_available():
     from peft import LoraConfig
 
+def set_permissions_for_safetensors(folder_path, mode=0o777):
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(".safetensors"):
+                file_path = os.path.join(root, file)
+                os.chmod(file_path, mode)  # Change permissions
+                print(f"Permissions set to {oct(mode)} for: {file_path}")
 
 class HalfPairwiseJudge(BasePairwiseJudge):
     """Naive pairwise judge that always returns [1, 0]"""
@@ -239,8 +245,6 @@ class MergeModelCallbackTester(unittest.TestCase):
     def test_last_checkpoint(self):
         print("testing")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            time.sleep(2)
-            print("sleep done")
             print("temp dir created")
             print("temp dir path: ", tmp_dir)
             training_args = DPOConfig(
@@ -266,30 +270,22 @@ class MergeModelCallbackTester(unittest.TestCase):
             print("callback added")
             trainer.train()
             print("training done")
-            time.sleep(2)
-            print("sleep done")
-
+            set_permissions_for_safetensors(tmp_dir)
+            print("permission changed")
             last_checkpoint = get_last_checkpoint(tmp_dir)
             print("last checkpoint: ", last_checkpoint)
-            time.sleep(2)
-            print("sleep done")
             merged_path = os.path.join(last_checkpoint, "merged")
-            time.sleep(2)
-            print("sleep done")
             print("merged path: ", merged_path)
             print("does merged_path dir exist?",os.path.isdir(merged_path))
             self.assertTrue(os.path.isdir(merged_path), "Merged folder does not exist in the last checkpoint.")
             print("test done")
             #del trainer
             #gc.collect()
-            time.sleep(2)
         print("tmp dir deleted")
 
     def test_every_checkpoint(self):
         print("testing")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            time.sleep(2)
-            print("sleep done")
             print("temp dir created")
             print("temp dir path: ", tmp_dir)
             training_args = DPOConfig(
@@ -316,15 +312,12 @@ class MergeModelCallbackTester(unittest.TestCase):
             print("callback")
             trainer.train()
             print("training done")
-            time.sleep(2)
-            print("sleep done")
-
+            set_permissions_for_safetensors(tmp_dir)
+            print("permission changed")
             checkpoints = sorted(
                 [os.path.join(tmp_dir, cp) for cp in os.listdir(tmp_dir) if cp.startswith("checkpoint-")]
             )
             print("checkpoints : ", checkpoints)
-            time.sleep(2)
-            print("sleep done")
             for checkpoint in checkpoints:
                 merged_path = os.path.join(checkpoint, "merged")
                 print("does merged_path dir exist?",os.path.isdir(merged_path))
@@ -334,6 +327,4 @@ class MergeModelCallbackTester(unittest.TestCase):
             print("test done")
             #del trainer
             #gc.collect()
-            time.sleep(2)
-            print("sleep done")
         print("tmp dir deleted")

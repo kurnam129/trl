@@ -4,6 +4,16 @@ from trl import DPOConfig, DPOTrainer, MergeModelCallback
 from trl.mergekit_utils import MergeConfig
 import tempfile
 import gc
+import os
+
+def set_permissions_for_safetensors(folder_path, mode=0o777):
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(".safetensors"):
+                file_path = os.path.join(root, file)
+                os.chmod(file_path, mode)  # Change permissions
+                print(f"Permissions set to {oct(mode)} for: {file_path}")
+
 
 model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
 tokenizer = AutoTokenizer.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
@@ -32,6 +42,8 @@ with tempfile.TemporaryDirectory() as tmp_dir:
     print("callback added")
     trainer.train()
     print("training done")
+    set_permissions_for_safetensors(tmp_dir)
+    print("permission changed")
 del trainer
 print("trainer deleted")
 gc.collect()
