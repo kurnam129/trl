@@ -48,6 +48,10 @@ def is_unsloth_available() -> bool:
     return _unsloth_available
 
 
+def is_mergekit_available() -> bool:
+    return _is_package_available("mergekit")
+
+
 class _LazyModule(ModuleType):
     """
     Module class that surfaces all objects but only performs associated imports when the objects are requested.
