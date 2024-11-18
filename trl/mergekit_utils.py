@@ -16,6 +16,21 @@ import torch
 from huggingface_hub import HfApi
 from mergekit.config import MergeConfiguration
 from mergekit.merge import MergeOptions, run_merge
+from transformers.utils.import_utils import _is_package_available
+import unittest
+
+def is_mergekit_available():
+    return _is_package_available("mergekit")
+
+
+def require_mergekit(test_case):
+    """
+    Decorator marking a test that requires Mergekit.
+
+    These tests are skipped when Mergekit isn't installed.
+
+    """
+    return unittest.skipUnless(is_mergekit_available(), "test requires Mergekit")(test_case)
 
 
 def upload_model_to_hf(folder_path: str, repo_id: str):
