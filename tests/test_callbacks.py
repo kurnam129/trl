@@ -24,7 +24,7 @@ from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import is_peft_available
 
 from trl import BasePairwiseJudge, DPOConfig, DPOTrainer, LogCompletionsCallback, MergeModelCallback, WinRateCallback
-from trl.mergekit_utils import MergeConfig
+from trl.mergekit_utils import MergeConfig, require_mergekit
 
 
 if is_peft_available():
@@ -225,6 +225,7 @@ class LogCompletionsCallbackTester(unittest.TestCase):
             self.assertIn(self.dataset["test"][0]["prompt"], completions["data"][0])
 
 
+@require_mergekit
 class MergeModelCallbackTester(unittest.TestCase):
     def setUp(self):
         self.model = AutoModelForCausalLM.from_pretrained("trl-internal-testing/tiny-random-LlamaForCausalLM")
